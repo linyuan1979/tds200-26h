@@ -1,0 +1,308 @@
+import { useState } from "react";
+import {
+  Modal,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+} from "react-native";
+import React from "react";
+import { PostData } from "@/utils/postData";
+import CommentsSection from "@/components/CommentsSection";
+
+type PostFormProps = {
+  visible: boolean;
+  // The author is the signed-in user. The Home screen reads it and passes it in.
+  authorName: string;
+  onClose: () => void;
+  onSubmit: (post: PostData) => void;
+};
+
+export default function PostForm({ visible, authorName, onClose, onSubmit }: PostFormProps) {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [hashtagInput, setHashtagInput] = useState("");
+  const [chips, setChips] = useState<string[]>([]);
+  const [titleError, setTitleError] = useState("");
+  const [comments, setComments] = useState<{ author: string; text: string }[]>([]);
+
+  // Strip any leading # the user may have typed, then add to the chips array.
+  function handleAddChip() {
+    const tag = hashtagInput.trim().replace(/^#+/, "");
+    if (tag && !chips.includes(tag)) {
+      setChips((prev) => [...prev, tag]);
+    }
+    setHashtagInput("");
+  }
+
+  function handleRemoveChip(tag: string) {
+    setChips((prev) => prev.filter((t) => t !== tag));
+  }
+
+  function handleSubmit() {
+    if (!title.trim()) {
+      setTitleError("Title is required.");
+      return;
+    }
+
+    const newPost: PostData = {
+      id: Date.now().toString(),
+      title: title.trim(),
+      description: description.trim(),
+      // Join chips into a space-separated string: "#expo #reactnative"
+      hashtags: chips.map((t) => `#${t}`).join(" "),
+      author: authorName || "Anonymous",
+      comments,
+    };
+
+    onSubmit(newPost);
+    resetForm();
+    onClose();
+  }
+
+  function handleClose() {
+    resetForm();
+    onClose();
+  }
+
+  function handleAddComment(text: string) {
+    setComments((prev) => [
+      ...prev,
+      { author: authorName || "Anonymous", text },
+    ]);
+  }
+
+  function resetForm() {
+    setTitle("");
+    setDescription("");
+    setHashtagInput("");
+    setChips([]);
+    setTitleError("");
+    setComments([]);
+  }
+
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={handleClose}
+    >
+      <KeyboardAvoidingView
+        style={styles.container}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity onPress={handleClose}>
+            <Text style={styles.cancelButton}>Cancel</Text>
+          </TouchableOpacity>
+          <Text style={styles.heading}>New Post</Text>
+          <TouchableOpacity onPress={handleSubmit}>
+            <Text style={styles.submitButton}>Post</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.form} keyboardShouldPersistTaps="handled">
+          {/* Title — required */}
+          <Text style={styles.label}>Title *</Text>
+          <TextInput
+            style={[styles.input, titleError ? styles.inputError : null]}
+            placeholder="What is this post about?"
+            value={title}
+            onChangeText={(text) => {
+              setTitle(text);
+              if (titleError) setTitleError("");
+            }}
+            autoFocus
+          />
+          {titleError ? <Text style={styles.errorText}>{titleError}</Text> : null}
+
+          {/* Description — optional */}
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="Add more details…"
+            value={description}
+            onChangeText={setDescription}
+            multiline
+            numberOfLines={4}
+          />
+
+          {/* Hashtags — chip input */}
+          <Text style={styles.label}>Hashtags</Text>
+
+          {/* Input row: text field + add button */}
+          <View style={styles.hashtagRow}>
+            <TextInput
+              style={styles.hashtagInput}
+              placeholder="machine learning"
+              value={hashtagInput}
+              onChangeText={setHashtagInput}
+              onSubmitEditing={handleAddChip}
+              autoCapitalize="none"
+              returnKeyType="done"
+            />
+            <TouchableOpacity style={styles.addChipButton} onPress={handleAddChip}>
+              <Text style={styles.addChipText}>+</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Chips — shown below the input once at least one is added */}
+          {chips.length > 0 && (
+            <View style={styles.chipsContainer}>
+              {chips.map((tag) => (
+                <View key={tag} style={styles.chip}>
+                  <Text style={styles.chipText}>#{tag}</Text>
+                  <TouchableOpacity onPress={() => handleRemoveChip(tag)}>
+                    <Text style={styles.chipRemove}>×</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Comments */}
+          <CommentsSection comments={comments} onAddComment={handleAddComment} />
+
+          {/* Author — always the signed-in user, not editable */}
+          <Text style={[styles.label, { marginTop: 20 }]}>Author</Text>
+          <View style={styles.authorRow}>
+            <Text style={styles.authorValue}>{authorName || "Anonymous"}</Text>
+            <Text style={styles.authorHint}>
+              {authorName ? "signed-in user" : "sign in to set your name"}
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  heading: {
+    fontSize: 17,
+    fontWeight: "600",
+  },
+  cancelButton: {
+    fontSize: 16,
+    color: "#FF3B30",
+  },
+  submitButton: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "600",
+  },
+  form: {
+    padding: 20,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "gray",
+    marginBottom: 6,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  input: {
+    backgroundColor: "#f2f2f7",
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  inputError: {
+    borderColor: "#FF3B30",
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+  errorText: {
+    color: "#FF3B30",
+    fontSize: 13,
+    marginTop: -14,
+    marginBottom: 14,
+  },
+  hashtagRow: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+  },
+  hashtagInput: {
+    flex: 1,
+    backgroundColor: "#f2f2f7",
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "transparent",
+  },
+  addChipButton: {
+    width: 50,
+    borderRadius: 10,
+    backgroundColor: "#007AFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  addChipText: {
+    color: "white",
+    fontSize: 26,
+    lineHeight: 30,
+  },
+  chipsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginBottom: 20,
+  },
+  chip: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#e8f0fe",
+    borderRadius: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  chipText: {
+    color: "#1a73e8",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  chipRemove: {
+    color: "#1a73e8",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  authorRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingVertical: 8,
+    marginBottom: 20,
+  },
+  authorValue: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  authorHint: {
+    fontSize: 13,
+    color: "gray",
+  },
+});
