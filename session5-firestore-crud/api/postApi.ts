@@ -9,6 +9,7 @@ import {
   serverTimestamp,
   query,
   orderBy,
+  where,
 } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { PostData } from "@/utils/postData";
@@ -32,22 +33,40 @@ export async function createPost(data: NewPost): Promise<void> {
   });
 }
 
-// READ ALL — returns all posts sorted by newest first
-export async function getAllPostsSorted(): Promise<PostData[]> {
-  const q = query(
-    collection(db, POSTS_COLLECTION),
-    orderBy("createdAt", "desc")
-  );
-  const snapshot = await getDocs(q);
+  export async function getAllPosts(
+    sortOrder: "asc" | "desc" = "desc"
+  ): Promise<PostData[]> {
+    const q = query(
+      collection(db, POSTS_COLLECTION),
+      orderBy("createdAt", sortOrder)
+    );
+
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as PostData));
+  }
+export async function getAllMyPosts(
+  authorName: string,
+  sortOrder: "asc" | "desc" = "desc"
+): Promise<PostData[]> {
+  if (!authorName?.trim()) {
+    throw new Error("Author name is required.");
+  }
+
+  try {
+    const q = query(
+      collection(db, POSTS_COLLECTION),
+      where("author", "==", authorName.trim()),
+      orderBy("createdAt", sortOrder)
+    );
+
+    const snapshot = await getDocs(q);
   return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as PostData));
+  } catch (error) {
+    console.error("Failed to fetch the author's posts:", error);
+    throw new Error("Could not load the author's posts.");
+  }
 }
 
-export async function getAllPosts(): Promise<PostData[]> {
- const snapshot = await getDocs(
-    collection(db, POSTS_COLLECTION)
-  );
-  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as PostData));
-}
 
 // READ ONE — returns a single post by its Firestore id, or null if not found
 export async function getPostById(id: string): Promise<PostData | null> {
