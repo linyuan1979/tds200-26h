@@ -14,7 +14,8 @@ export default function RootLayout() {
           name="(tabs)"
           options={{
             headerShown: false,
-            drawerLabel: "Home",
+            drawerLabel: "Home", //it shows what to display on the drawer menu
+            title: "Posts",
           }}
         />
         <Drawer.Screen

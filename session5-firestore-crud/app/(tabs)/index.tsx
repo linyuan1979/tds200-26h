@@ -27,6 +27,7 @@ export default function HomeScreen() {
   const [authorName, setAuthorName] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+
   // Whenever the screen gains focus (or the sort order changes), load signed in user
   // and load their posts for them.
   useFocusEffect(
@@ -42,6 +43,17 @@ export default function HomeScreen() {
     }, [sortOrder])
   );
 
+
+  // Reads who is signed in, updates state, and returns the name so callers
+  // can use it immediately without waiting on a state update.
+  async function loadAuthor(): Promise<string> {
+    const stored = await AsyncStorage.getItem(SESSION_USER);
+    const name = stored ? (JSON.parse(stored) as SessionUser).name : "";
+    setAuthorName(name);
+    return name;
+  }
+
+  
   // Show all posts when no one is signed in.
   // Show only the signed-in user's posts otherwise.
   async function loadPosts(
@@ -70,15 +82,6 @@ export default function HomeScreen() {
     } finally {
       setLoading(false);
     }
-  }
-
-  // Reads who is signed in, updates state, and returns the name so callers
-  // can use it immediately without waiting on a state update.
-  async function loadAuthor(): Promise<string> {
-    const stored = await AsyncStorage.getItem(SESSION_USER);
-    const name = stored ? (JSON.parse(stored) as SessionUser).name : "";
-    setAuthorName(name);
-    return name;
   }
 
   async function handleSort() {

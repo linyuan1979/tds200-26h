@@ -19,47 +19,45 @@ import Spacer from "@/components/Spacer";
 const POSTS_KEY = "tds200_posts";
 
 export default function HomeScreen() {
-  const [posts, setPosts] = useState<PostData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadPosts();
-  }, []);
+    const [posts, setPosts] = useState<PostData[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    useEffect(() => {
+      loadPosts();
+    }, []);
 
-  async function loadPosts() {
+  async function getStoredPosts(): Promise<PostData[]> {
     const stored = await AsyncStorage.getItem(POSTS_KEY);
 
     if (stored) {
-      setPosts(JSON.parse(stored));
-      Toast.show({ type: "info", text1: "Posts fetched from local storage." });
-    } else {
-      // First launch — seed storage with dummy data.
-      const initial = getAllPosts();
-      await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(initial));
-      setPosts(initial);
-      Toast.show({ type: "info", text1: "Posts saved to local storage for the first time." });
+      return JSON.parse(stored);
     }
 
+    // If storage is empty, seed it with the initial posts.
+    const initial = getAllPosts();
+
+    await AsyncStorage.setItem(
+      POSTS_KEY,
+      JSON.stringify(initial)
+    );
+
+    return initial;
+  }
+
+  async function loadPosts() {
+    const posts = await getStoredPosts();
+    setPosts(posts);
     setLoading(false);
+    Toast.show({ type: "info", text1: "Posts loaded from local storage." });
   }
 
   async function handleRefresh() {
     setRefreshing(true);
-    const stored = await AsyncStorage.getItem(POSTS_KEY);
-
-    if (stored) {
-      setPosts(JSON.parse(stored));
-      Toast.show({ type: "info", text1: "Posts refreshed from storage." });
-    } else {
-      // Storage was cleared — re-seed so the list is never empty.
-      const initial = getAllPosts();
-      await AsyncStorage.setItem(POSTS_KEY, JSON.stringify(initial));
-      setPosts(initial);
-      Toast.show({ type: "info", text1: "Storage was empty — posts re-seeded." });
-    }
-
+    const posts = await getStoredPosts();
+    setPosts(posts);
     setRefreshing(false);
+    Toast.show({ type: "info", text1: "Posts refreshed from local storage." });
   }
 
   // Removes the posts key from AsyncStorage and clears the list.

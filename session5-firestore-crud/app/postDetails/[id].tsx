@@ -48,7 +48,7 @@ export default function PostDetailsScreen() {
     // Update local state so the screen reflects the change immediately.
     setPost((prev) => (prev ? { ...prev, ...updated } : prev));
     setEditVisible(false);
-    //router.back();
+    router.back();
   }
 
   function handleDelete() {

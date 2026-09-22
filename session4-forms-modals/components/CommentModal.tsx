@@ -46,7 +46,6 @@ export default function CommentModal({ visible, onClose, onAdd }: CommentModalPr
     >
       <View style={styles.backdrop}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           <View style={styles.dialog}>
             <Text style={styles.title}>Add a comment</Text>

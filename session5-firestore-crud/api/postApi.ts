@@ -36,8 +36,9 @@ export async function createPost(data: NewPost): Promise<void> {
   export async function getAllPosts(
     sortOrder: "asc" | "desc" = "desc"
   ): Promise<PostData[]> {
+    const collectionRef = collection(db, POSTS_COLLECTION);
     const q = query(
-      collection(db, POSTS_COLLECTION),
+      collectionRef,
       orderBy("createdAt", sortOrder)
     );
 

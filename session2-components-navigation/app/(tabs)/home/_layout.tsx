@@ -18,12 +18,14 @@ export default function HomeLayout() {
       <Stack.Screen
         name="index"
         options={{
-          title: "Posts",
-          headerRight: () => (
+          //headerShown: false,
+          
+           title: "Posts",
+           headerRight: () => (
             <TouchableOpacity onPress={() => router.push("/settingsScreen")}>
               <AntDesign name="setting" size={22} color="#007AFF" />
             </TouchableOpacity>
-          ),
+          ),  
         }}
       />
       <Stack.Screen

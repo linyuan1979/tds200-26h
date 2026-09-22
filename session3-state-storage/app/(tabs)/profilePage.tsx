@@ -1,4 +1,4 @@
- import { useState, useCallback } from "react";
+ import { useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
@@ -26,15 +26,23 @@ export default function ProfilePage() {
   // useFocusEffect runs every time this tab gains focus.
   // We read SESSION_USER, so the profile only appears when a user
   // has actually signed in on the Sign in tab.
-  useFocusEffect(
-    useCallback(() => {
+/*   useEffect(() => {
       async function loadUser() {
         const stored = await AsyncStorage.getItem(SESSION_USER);
         setUser(stored ? JSON.parse(stored) : null);
       }
       loadUser();
-    }, [])
-  );
+    }, []); */
+
+      useEffect(() => {
+      async function loadUser() {
+        const stored = await AsyncStorage.getItem(SESSION_USER);
+        setUser(stored ? JSON.parse(stored) : null);
+      }
+      loadUser();
+    }, []);
+
+
 
   if (!user) {
     return (
