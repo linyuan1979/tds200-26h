@@ -1,13 +1,13 @@
-# Session 1 — Expo Setup, Project Structure, and 3-Tab Layout
+# Session 1 — Expo Setup, Project Structure, and Tab Layout
 
-## What you will learn
+A first Expo Router app with two bottom tabs: a **Home** feed that lists posts, and a **Sign in** placeholder screen. The posts come from a static list in the code. There is no database, state, or user input yet.
 
-- How to create and run an Expo project
-- What the folder structure means
-- How file-based routing works with Expo Router
-- How to build a tab layout with 3 screens
-- How to render a list of data with `FlatList`
-- How to style components with `StyleSheet`
+## Features
+
+- **Home tab**: a scrollable list of 5 posts, rendered with `FlatList`. Each post is a card showing the title, description, hashtags, and author.
+- **Sign in tab**: a placeholder screen saying authentication comes later.
+- **Tab bar**: 2 tabs with AntDesign icons (`home` and `login`).
+- **Typed data**: every post follows a `PostData` TypeScript interface.
 
 ## How to run
 
@@ -17,58 +17,48 @@ npm install
 npx expo start
 ```
 
-Press `i` to open iOS simulator, `a` for Android, or `w` for the browser.
+Press `i` to open the iOS simulator, `a` for Android, or `w` for the browser. Session 1 needs no `.env` file.
 
 ## Project structure
 
 ```
 session1-setup/
   app/
-    _layout.tsx             Root layout — wraps everything in a Stack navigator
-    (tabs)/
-      _layout.tsx           Defines the 3 bottom tabs
-      index.tsx             Home screen — shows a list of posts
-      profilePage.tsx       Profile screen — placeholder
-      authenticationPage.tsx  Sign In screen — placeholder
+    _layout.tsx              Root layout: a Tabs navigator with the 2 tabs
+    index.tsx                Home tab: list of posts
+    authenticationPage.tsx   Sign in tab: placeholder
   utils/
-    postData.ts             The TypeScript type (interface) for a post
-    dummyPostData.ts        Static list of posts used as example data
-  app.json                  App configuration (name, icon, splash screen)
-  package.json              Dependencies and scripts
+    postData.ts              PostData interface (the shape of a post)
+    dummyPostData.ts         5 static posts, plus getAllPosts() and getPostById()
+  assets/images/             App icon, adaptive icon, splash icon, favicon
+  app.json                   App config (name, icon, splash screen, typed routes)
+  package.json               Dependencies and scripts (Expo SDK 54, Expo Router 6)
+  tsconfig.json              TypeScript config, including the "@/" import alias
+  .env.example               Placeholder; no variables needed yet
 ```
 
 ## Key files to read
 
 | File | Why it matters |
 |---|---|
-| `app/_layout.tsx` | Every Expo Router app needs a root layout |
-| `app/(tabs)/_layout.tsx` | This is what creates the 3 bottom tabs |
-| `app/(tabs)/index.tsx` | Shows how FlatList renders a list of items |
+| `app/_layout.tsx` | Creates the tab bar. Each `Tabs.Screen` `name` matches a file in `app/` |
+| `app/index.tsx` | Shows how `FlatList` renders a list, and how `StyleSheet` styles the cards |
 | `utils/postData.ts` | Shows how a TypeScript interface defines a data shape |
-| `utils/dummyPostData.ts` | Static data — no database yet |
-
-## What is NOT in this session (on purpose)
-
-| Feature | Introduced in |
-|---|---|
-| State and interactivity | Session 3 |
-| Forms and creating new posts | Session 4 |
-| Database (Firebase Firestore) | Session 5 |
-| Authentication | Session 8 |
-| Styling with NativeWind | Session 10 |
+| `utils/dummyPostData.ts` | Static data and helper functions; no database yet |
 
 ## Concepts explained
 
 ### File-based routing
-In Expo Router, the filename determines the route:
-- `app/(tabs)/index.tsx` → the default tab screen (shown first)
-- `app/(tabs)/profilePage.tsx` → the profile tab
-- The `(tabs)` folder name wraps all three screens in tab navigation without adding to the URL
+In Expo Router, the file name is the route:
+- `app/index.tsx` is the default screen, shown first (the Home tab)
+- `app/authenticationPage.tsx` is the Sign in tab
+- `app/_layout.tsx` wraps the screens in the folder. Here it uses `<Tabs>`, so each screen becomes a bottom tab.
 
 ### FlatList
-`FlatList` is the recommended way to render long scrollable lists in React Native.
-It only renders items that are visible on screen, which is important for performance.
+`FlatList` is the recommended way to render long, scrollable lists in React Native. It only renders the items visible on screen, which keeps it fast. `keyExtractor` gives each item a unique key (the post `id`), and `ItemSeparatorComponent` adds the gap between cards.
 
 ### StyleSheet
-`StyleSheet.create({})` is React Native's way of defining styles.
-It looks similar to CSS but uses camelCase (`backgroundColor` not `background-color`).
+`StyleSheet.create({})` is how React Native defines styles. It looks like CSS but uses camelCase (`backgroundColor`, not `background-color`). The card shadow uses `shadow*` properties on iOS and `elevation` on Android.
+
+### The `@/` import alias
+`tsconfig.json` maps `@/*` to the project root, so `import { getAllPosts } from "@/utils/dummyPostData"` works from any folder.
