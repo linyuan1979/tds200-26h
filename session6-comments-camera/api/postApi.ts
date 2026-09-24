@@ -109,12 +109,16 @@ export async function deletePost(id: string): Promise<void> {
 }
 
 // LIKE / UNLIKE — adds or removes the user's name from the post's likes array
-export async function toggleLike(
+ export async function toggleLike(
   id: string,
   authorId: string,
   currentlyLiked: boolean
 ): Promise<void> {
-  await updateDoc(doc(db, POSTS_COLLECTION, id), {
+  const docRef= doc(db, POSTS_COLLECTION, id);
+  await updateDoc(docRef, {
     likes: currentlyLiked ? arrayRemove(authorId) : arrayUnion(authorId),
   });
-}
+} 
+
+
+ 

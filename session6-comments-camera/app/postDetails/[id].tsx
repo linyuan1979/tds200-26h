@@ -77,7 +77,7 @@ export default function PostDetailsScreen() {
 
   // LIKE — optimistic update: flip likes array in local state immediately,
   // then persist with arrayUnion / arrayRemove in Firestore.
-  async function handleToggleLike() {
+   async function handleToggleLike() {
     if (!post) return;
     const currentLikes = post.likes ?? [];
     const name = displayName;
@@ -88,8 +88,11 @@ export default function PostDetailsScreen() {
     setPost((prev) => (prev ? { ...prev, likes: newLikes } : prev));
     await toggleLike(post.id, name, alreadyLiked);
   }
+ 
 
-  // ADD COMMENT — writes to Firestore, then updates local state immediately.
+
+ 
+      // ADD COMMENT — writes to Firestore, then updates local state immediately.
   async function handleAddComment(text: string) {
     if (!post) return;
     const commentData: CommentData = {
@@ -233,7 +236,7 @@ export default function PostDetailsScreen() {
 {/* This is to add like support. The like button toggles the current user's like status, and the like count updates immediately in the UI. 
 The list of users who liked the post is displayed below the like count. */}
         {/* ── Like section ─────────────────────────────────────────── */}
-        <View style={styles.likeSection}>
+         <View style={styles.likeSection}>
           <TouchableOpacity style={styles.likeButton} onPress={handleToggleLike}>
             <Ionicons
               name={isLiked ? "heart" : "heart-outline"}
@@ -247,14 +250,15 @@ The list of users who liked the post is displayed below the like count. */}
           <Text style={styles.likeCount}>
             {likeCount} {likeCount === 1 ? "like" : "likes"}
           </Text>
-        </View>
-
+        </View> 
+ 
         {/* Who liked */}
-        {likeCount > 0 && (
+          {likeCount > 0 && (
           <Text style={styles.likedBy}>
             Liked by {likes.join(", ")}
           </Text>
         )}
+
 
 {/* This is to add comment support. The CommentsSection component displays the list of comments, and allows the current user to add, edit, or delete their own comments. 
 The comments are loaded from Firestore when the post is loaded, and any changes are reflected immediately in the UI. */}

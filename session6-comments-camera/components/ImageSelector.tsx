@@ -24,6 +24,7 @@ export default function ImageSelector({ images, onChange }: ImageSelectorProps) 
   const [facing, setFacing] = useState<"back" | "front">("back");
 
   const cameraRef = useRef<CameraView | null>(null);
+
   const [permission, requestPermission] = useCameraPermissions();
 
   const isSimulator =
