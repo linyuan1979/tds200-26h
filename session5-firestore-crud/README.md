@@ -1,120 +1,116 @@
-# Session 5 — Firebase Firestore CRUD
+# Session 5 — Firestore CRUD
 
-## What you will learn
+Posts now live in the cloud. The app stores them in a **Firebase Firestore** `posts` collection and supports all four **CRUD** operations: **C**reate a post, **R**ead the list and a single post, **U**pdate it through an Edit form, and **D**elete it. Sign in still works locally with AsyncStorage, and it decides which posts the Home tab shows.
 
-- How to connect an Expo app to Firebase
-- How Firestore stores data as documents in collections
-- How to create, read, update, and delete (CRUD) Firestore documents
-- How `serverTimestamp()` stores consistent timestamps
-- How to refetch data on pull-to-refresh and on screen focus
-- How to structure Firebase config safely with environment variables
+## Features
+
+### Home tab
+- Loads posts from Firestore, with a spinner ("Loading posts…") while waiting.
+- **Signed out:** shows every post. **Signed in:** shows only your own posts (where `author` equals your name).
+- A **Newest first / Oldest first** button switches the sort order by creation time.
+- **Pull down to refresh.**
+- An empty list shows "No posts yet." (or "You have no posts yet." when signed in) and "Tap + to create the first one."
+- The **+** button opens the New Post form. Saving writes the post to Firestore, shows "Post saved!", and reloads the list.
+- If loading fails, an error toast shows "Could not load posts" and the reason.
+
+### New Post / Edit Post form (modal)
+- One `PostForm` component, used in two modes:
+  - **New Post** (from Home): empty form, **Post** button, author shown with the hint "from Sign In tab".
+  - **Edit Post** (from Post details): pre-filled with the post's title, description, and hashtags, with a **Save** button.
+- Title is required; description is optional; hashtags are added as removable chips.
+- The author is the signed-in user's name, or "Anonymous". Editing never changes the author.
+
+### Post details
+- Loads a single post from Firestore by its id. The header shows the post's title.
+- Shows the title, author, description, and each hashtag as a chip.
+- **Edit** opens the form in edit mode. Saving updates Firestore and the screen right away.
+- **Delete** asks "This will permanently delete the post. Continue?". Confirming deletes it from Firestore and goes back.
+
+### Sign in and Profile tabs
+- Unchanged from Session 4: local sign up / sign in with AsyncStorage, and a Profile tab with **Sign out** and **Clear all local data**.
 
 ## How to run
 
-```bash
-cd session5-firestore-crud
-cp .env.example .env   # fill in your Firebase project values
-npm install
-npx expo start --clear
-```
+1. Create a Firebase project and add a **Web app** to it.
+2. Create a **Firestore database**. While learning, start it in *test mode* so the app can read and write.
+3. Copy the environment file and fill in your values from *Firebase Console → Project settings → Your apps → SDK setup and configuration*:
+   ```bash
+   cd session5-firestore-crud
+   cp .env.example .env
+   ```
+4. Install and start:
+   ```bash
+   npm install
+   npx expo start
+   ```
+
+Press `i` to open the iOS simulator, `a` for Android, or `w` for the browser. Restart `npx expo start` after changing `.env`.
+
+> **Index needed for "my posts":** listing one author's posts sorted by date (`where("author", "==", …)` + `orderBy("createdAt")`) needs a Firestore *composite index*. The first time you sign in and open Home, Firestore logs an error in the terminal with a link that creates the index. Open it, wait until the index is built, then refresh.
+
+> **On the web**, React Native's `Alert.alert` does not show a dialog, so the Delete confirmation only works on iOS and Android.
 
 ## Project structure
 
 ```
 session5-firestore-crud/
-  app/
-    _layout.tsx               Root Stack navigator
-    postDetails/[id].tsx      Post detail — view, edit, delete
-    (tabs)/
-      _layout.tsx             Tab navigator (Home, Profile, Sign in)
-      index.tsx               Home — fetches posts from Firestore
-      profilePage.tsx         Shows the signed-in user (from AsyncStorage)
-      authenticationPage.tsx  Local sign up / sign in (AsyncStorage, no Firebase Auth yet)
+  firebaseConfig.ts          Starts Firebase from the .env values and exports `db`
+  .env.example               The Firebase keys you need to fill in (copy to .env)
   api/
-    postApi.ts                Firestore CRUD operations for posts
+    postApi.ts               All Firestore calls: create, get all, get mine, get one, update, delete
+  app/
+    _layout.tsx              Root Stack (tabs + post details) and the <Toast /> host
+    postDetails/[id].tsx     One post from Firestore, with Edit and Delete
+    (tabs)/
+      _layout.tsx            Bottom tabs: Home, Profile, Sign in
+      index.tsx              Home: Firestore posts, sort button, + button
+      authenticationPage.tsx Local sign up / sign in
+      profilePage.tsx        Signed-in user, sign out, clear all data
   components/
-    Post.tsx                  Single post card, links to postDetails
-    PostForm.tsx               Modal form, used for both create and edit
-    Spacer.tsx                 Small layout helper
+    PostForm.tsx             New Post / Edit Post modal
+    Post.tsx                 Post card linking to its details
+    Spacer.tsx               Empty View with a given height/width
   utils/
-    postData.ts                PostData interface
-    userData.ts                Local user accounts + session (AsyncStorage)
-  examples/
-    firestore-crud-basics/    Standalone CRUD demo used for live coding
-  assignment/                 Practice exercises with solutions
-  firebaseConfig.ts           Initialises Firebase from .env variables
-  .env.example                Required environment variable names
+    postData.ts              PostData interface (id, title, description, hashtags, author)
+    userData.ts              Local accounts and the signed-in user (AsyncStorage)
 ```
 
-## Key concepts
+## Key files to read
 
-### Firestore data model
+| File | Why it matters |
+|---|---|
+| `firebaseConfig.ts` | `initializeApp` + `getFirestore`, with keys read from `process.env` |
+| `api/postApi.ts` | Every database call in one place, one function per CRUD operation |
+| `app/(tabs)/index.tsx` | Choosing between "all posts" and "my posts", and re-sorting |
+| `app/postDetails/[id].tsx` | Reading one document, then updating or deleting it |
+| `components/PostForm.tsx` | One form for both creating and editing, switched by `initialData` |
 
-Data lives in **collections** → **documents** → **fields**:
+## Concepts explained
 
-```
-posts/          ← collection
-  abc123/       ← document (auto-generated id)
-    title: "My post"
-    description: "..."
-    hashtags: "#expo #reactnative"
-    author: "Jane"
-    createdAt: Timestamp
-```
+### Firestore basics
+Firestore stores **documents** (JSON-like objects) inside **collections**. Every post is a document in the `posts` collection. Firestore creates the document id itself when you use `addDoc`, which is why `NewPost` has no `id` field.
 
-### CRUD with postApi.ts
+### CRUD with the Firebase SDK
 
-```ts
-// CREATE
-await createPost({ title, description, hashtags, author });
+| Operation | Function in `postApi.ts` | Firestore call |
+|---|---|---|
+| Create | `createPost(data)` | `addDoc(collection(db, "posts"), { ...data, createdAt: serverTimestamp() })` |
+| Read all | `getAllPosts(order)` | `getDocs(query(collection, orderBy("createdAt", order)))` |
+| Read mine | `getAllMyPosts(author, order)` | adds `where("author", "==", author)` to the query |
+| Read one | `getPostById(id)` | `getDoc(doc(db, "posts", id))`; returns `null` if it doesn't exist |
+| Update | `updatePost(id, data)` | `updateDoc(...)`; only the fields you pass change |
+| Delete | `deletePost(id)` | `deleteDoc(...)` |
 
-// READ — all posts, newest first
-const posts = await getAllPostsSorted();
-
-// READ — one post by id
-const post = await getPostById(id);
-
-// UPDATE — only the fields you pass are changed; everything else stays the same
-await updatePost(id, { title, description, hashtags });
-
-// DELETE
-await deletePost(id);
-```
-
-Note: this session fetches data on demand (on screen focus and pull-to-refresh)
-rather than subscribing with `onSnapshot`. Real-time listeners are not used here.
+`serverTimestamp()` lets Firestore fill in the creation time, which the list is sorted by. Each result is turned into a `PostData` with `{ id: d.id, ...d.data() }`.
 
 ### Environment variables
+The Firebase keys are kept out of the code. `firebaseConfig.ts` reads them from `process.env.EXPO_PUBLIC_FIREBASE_*`. Expo only exposes variables that start with `EXPO_PUBLIC_` to the app. `.env` is listed in `.gitignore`, so your real keys are never committed; `.env.example` shows which keys are needed.
 
-Firebase credentials go in `.env`, not in source code:
+### An API layer
+Screens never call Firestore directly. They call functions like `createPost()` or `deletePost()` from `api/postApi.ts`. If the database changes later, only this one file has to change.
 
-```
-EXPO_PUBLIC_FIREBASE_API_KEY=...
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=...
-```
+### One form for create and edit
+`PostForm` is in edit mode when it gets an `initialData` prop (`isEditMode = !!initialData`). A `useEffect` fills in the fields each time the modal opens, and the heading and button change between "New Post / Post" and "Edit Post / Save".
 
-Prefix `EXPO_PUBLIC_` makes a variable available in the client bundle.
-
-## What changed from Session 4
-
-| File | Change |
-|---|---|
-| `firebaseConfig.ts` | New — connects to Firebase using .env values |
-| `api/postApi.ts` | New — create, read, update, delete for posts |
-| `app/(tabs)/index.tsx` | Replaced dummy data with `getAllPosts` from Firestore |
-| `app/postDetails/[id].tsx` | Loads, edits, and deletes a post via Firestore |
-| `components/PostForm.tsx` | Shared modal form for creating and editing a post |
-| `package.json` | Added `firebase` |
-
-## What is NOT in this session (on purpose)
-
-| Feature | Introduced in |
-|---|---|
-| Real-time updates (`onSnapshot`) | Session 6 |
-| Comments | Session 6 |
-| Image upload | Session 7 |
-| Firebase Authentication | Session 8 |
-| NativeWind styling | Session 10 |
-
-Sign up / sign in on this session's Sign in tab is a **local-only** simulation
-using AsyncStorage — it does not use Firebase Authentication yet.
+### Error handling
+`loadPosts()` uses `try / catch / finally`: errors are shown in a toast, and `finally` always turns the spinner off, whether loading worked or not.
