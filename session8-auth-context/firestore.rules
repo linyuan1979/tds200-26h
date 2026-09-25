@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /posts/{postId} {
+      // Option 1: only signed-in users can read posts (original — matches the
+      // all-or-nothing route guard in app/_layout.tsx).
+      allow read: if request.auth != null;
+
+      // Option 2: anyone can read posts, so guests can view the Home tab.
+      // Comment out Option 1 above and uncomment this line to switch.
+      // Keep this in sync with the route guard option chosen in app/_layout.tsx.
+      // allow read: if true;
+
+      // Writes always require sign-in in both options. There's no ownership
+      // field on a post (author is just a display name, not a UID), so any
+      // signed-in user can create/update/delete — this session doesn't yet
+      // have the authorId-based ownership checks introduced later.
+      allow create, update, delete: if request.auth != null;
+    }
+
+    match /comments/{commentId} {
+      // Comments are only reachable from postDetails, which stays protected
+      // under both Home options above, so this collection stays auth-only.
+      allow read, create, update, delete: if request.auth != null;
+    }
+
+  }
+}

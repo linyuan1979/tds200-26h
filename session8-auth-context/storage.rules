@@ -1,0 +1,22 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Images are stored under posts/{uploadId}/...
+    match /posts/{uploadId}/{allPaths=**} {
+      // Option 1: only signed-in users can view post images (original).
+      allow read: if request.auth != null;
+
+      // Option 2: anyone can view post images, so guests can see images on
+      // the Home tab's posts. Comment out Option 1 above and uncomment this
+      // line to switch — keep in sync with the Firestore read rule and the
+      // route guard option in app/_layout.tsx.
+      // allow read: if true;
+
+      // Uploading always requires sign-in in both options. uploadId is just
+      // a timestamp, not a UID, so there's no per-user path check here.
+      allow write: if request.auth != null;
+    }
+
+  }
+}
