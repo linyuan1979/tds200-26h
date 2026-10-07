@@ -18,12 +18,12 @@ function RootNavigator() {
     const onAuthScreen = segments[0] === "auth";
 
     // Option 1: everything except /auth requires sign-in (original behavior).
-    //const isProtectedRoute = !onAuthScreen;
+    const isProtectedRoute = !onAuthScreen;
 
     // Option 2: guests can also view the Home tab; everything else still requires sign-in.
 
-     const onHomeScreen = segments[0] === "(tabs)" && segments[1] === undefined;
-     const isProtectedRoute = !onAuthScreen && !onHomeScreen;
+     //const onHomeScreen = segments[0] === "(tabs)" && segments[1] === undefined;
+     //const isProtectedRoute = !onAuthScreen && !onHomeScreen;
 
     if (!user && isProtectedRoute) {
       router.replace("/auth");

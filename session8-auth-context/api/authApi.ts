@@ -12,7 +12,7 @@ export async function signInWithEmail(email: string, password: string) {
 
 export async function signUpWithEmail(email: string, password: string, name: string) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
-  await updateProfile(user, { displayName: name });
+  //await updateProfile(user, { displayName: name });
   return user;
 }
 

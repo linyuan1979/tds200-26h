@@ -35,11 +35,11 @@ export default function HomeScreen() {
   const authorName = user?.displayName ?? user?.email ?? "Anonymous";
 
   // Option 1: create post always visible.
-  //const canPost = true;
+  const canPost = true;
 
   // Option 2: guests can view Home but can't create posts.
 
-  const canPost = !!user;
+  //const canPost = !!user;
 
   function showToast(message: string) {
     setToast(message);
