@@ -3,6 +3,7 @@ import * as WebBrowser from "expo-web-browser";
 WebBrowser.maybeCompleteAuthSession(); // must run first
 
 import { useEffect } from "react";
+import React from "react";
 
 // Popup-only relay page: just hands the id_token to the opener window, which
 // owns the actual signInWithGoogleIdToken call (see auth.tsx's message listener).
