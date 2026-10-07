@@ -141,6 +141,15 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Shows who is signed in — the (protected) guard guarantees a user here. */}
+      {user && (
+        <View style={styles.userBox}>
+          <Text style={styles.userLabel}>Signed in as</Text>
+          <Text style={styles.userName}>{user.displayName ?? user.email}</Text>
+          {user.displayName && <Text style={styles.userEmail}>{user.email}</Text>}
+        </View>
+      )}
+
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.filterButton} onPress={handleSort}>
           <Text style={styles.filterButtonText}>
@@ -218,6 +227,16 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   fabIcon: { color: "white", fontSize: 28, lineHeight: 32 },
+  userBox: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#e3f0ff",
+  },
+  userLabel: { fontSize: 12, color: "gray" },
+  userName: { fontSize: 16, fontWeight: "bold", color: "#333" },
+  userEmail: { fontSize: 13, color: "#555" },
   buttonRow: {
     flexDirection: "row",
     gap: 10,
