@@ -30,16 +30,16 @@ export default function HomeScreen() {
   const [viewMode, setViewMode] = useState<"all" | "mine">("all");
 
   // useAuth() gives us the current user from AuthContext.
-  // user is guaranteed non-null here — _layout.tsx redirects to /auth if not signed in.
+  // user is null for guests — _layout.tsx (Option 2) lets them view Home without signing in.
   const { user } = useAuth();
   const authorName = user?.displayName ?? user?.email ?? "Anonymous";
 
   // Option 1: create post always visible.
-  const canPost = true;
+  //const canPost = true;
 
   // Option 2: guests can view Home but can't create posts.
 
-  //const canPost = !!user;
+  const canPost = !!user;
 
   function showToast(message: string) {
     setToast(message);
@@ -141,6 +141,19 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* Shows whether someone is signed in. Guests can see Home too (Option 2 in _layout.tsx). */}
+      <View style={[styles.userBox, !user && styles.userBoxGuest]}>
+        {user ? (
+          <>
+            <Text style={styles.userLabel}>Signed in as</Text>
+            <Text style={styles.userName}>{user.displayName ?? user.email}</Text>
+            {user.displayName && <Text style={styles.userEmail}>{user.email}</Text>}
+          </>
+        ) : (
+          <Text style={styles.userLabel}>Not signed in — browsing as guest</Text>
+        )}
+      </View>
+
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.filterButton} onPress={handleSort}>
           <Text style={styles.filterButtonText}>
@@ -218,6 +231,17 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   fabIcon: { color: "white", fontSize: 28, lineHeight: 32 },
+  userBox: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 10,
+    backgroundColor: "#e3f0ff",
+  },
+  userBoxGuest: { backgroundColor: "#e5e5ea" },
+  userLabel: { fontSize: 12, color: "gray" },
+  userName: { fontSize: 16, fontWeight: "bold", color: "#333" },
+  userEmail: { fontSize: 13, color: "#555" },
   buttonRow: {
     flexDirection: "row",
     gap: 10,

@@ -18,8 +18,10 @@ export default function ProfilePage() {
     // state change fires while we're still on this profile screen, and
     // _layout.tsx's redirect effect sends us to /auth before this function
     // gets a chance to navigate anywhere itself.
+
     router.replace("/");
-    await signOutUser();
+    await signOutUser()
+
   }
 
   return (
