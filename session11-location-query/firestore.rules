@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /posts/{postId} {
+      // Any signed-in user can read posts
+      allow read: if request.auth != null;
+
+      // Create: must be signed in, and authorId in the new document must be the caller's UID
+      allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+
+      // Update: the post owner only
+      allow update: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+
+      // Delete: the post owner only
+      allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+    }
+
+    match /comments/{commentId} {
+      // Any signed-in user can read comments
+      allow read: if request.auth != null;
+
+      // Create: must be signed in, and authorId must be the caller's UID
+      allow create: if request.auth != null
+                    && request.resource.data.authorId == request.auth.uid;
+
+      // Update: the comment owner only, and authorId can't be changed to someone else
+      allow update: if request.auth != null
+                    && resource.data.authorId == request.auth.uid
+                    && request.resource.data.authorId == resource.data.authorId;
+
+      // Delete: the comment owner only
+      allow delete: if request.auth != null
+                    && resource.data.authorId == request.auth.uid;
+    }
+
+  }
+}
