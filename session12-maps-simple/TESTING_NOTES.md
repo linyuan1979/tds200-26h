@@ -85,11 +85,23 @@ Old posts from earlier sessions that have no location field should also display 
 | Open on web (`npx expo start --web`) a post that has a location | Google Maps loads with a single pin at the post's coordinates |
 | Remove `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` and open on web | Error text: "Could not load Google Maps…" instead of a crash |
 
-This session has no Map tab — the only map is the single-pin preview on a post's detail screen. See `session12-maps-full` for the Map tab.
+---
+
+## 7. Map tab
+
+| Step | Expected |
+|---|---|
+| Open the Map tab with no located posts | Banner: "No posts with locations yet…", map centred on Oslo |
+| Create two posts with location in different places, open the Map tab | Banner shows "📍 2 posts on the map" and both pins fit on screen |
+| Only one located post | Map is zoomed in on that single pin, not the whole world |
+| Tap a pin, then tap its bubble (iOS / Android) | Bubble shows title and author; tapping it opens the post detail |
+| Tap a pin on web, then "Open post →" | Popup shows title and author; the button opens the post detail |
+| Create a new located post on Home, switch back to the Map tab | New pin appears without restarting the app |
+| Posts without a location | Not shown on the map and not counted in the banner |
 
 ---
 
-## 7. Privacy reminder
+## 8. Privacy reminder
 
 The location stored is the GPS coordinate plus the human-readable address resolved once via reverse geocoding (`utils/locationUtils.ts`). Verify that:
 - The coordinates and address shown to the user match what's stored in Firestore
@@ -98,7 +110,7 @@ The location stored is the GPS coordinate plus the human-readable address resolv
 
 ---
 
-## 8. Regression — all Session 11 features still work
+## 9. Regression — all Session 11 features still work
 
 | Feature | Check |
 |---|---|
@@ -113,7 +125,7 @@ The location stored is the GPS coordinate plus the human-readable address resolv
 
 ---
 
-## 9. Sort button
+## 10. Sort button
 
 | Step | Expected |
 |---|---|
@@ -125,7 +137,7 @@ The location stored is the GPS coordinate plus the human-readable address resolv
 
 ---
 
-## 10. React Query (from Session 11)
+## 11. React Query (from Session 11)
 
 | Step | Expected |
 |---|---|

@@ -1,21 +1,21 @@
 # Session 12 — Maps (Simple)
 
-This session is **Session 11 plus one map**. Everything from Session 11 (geolocation, React Query, search, sorting, comments, NativeWind) carries forward unchanged. The only new thing is a small map preview with a single pin on a post's detail screen.
+This session is **Session 11 plus one map**. Everything from Session 11 (geolocation, React Query, search, sorting, comments, NativeWind) carries forward unchanged. Two things are new: a small map preview with a single pin on a post's detail screen, and a **Map tab** that shows every post with a location.
 
-> Want the bigger version, with a Map tab that shows every post? See `session12-maps-full`.
+> Want the bigger version, with posts at the same spot grouped into one pin? See `session12-maps-full`.
 
 ## What's new in this session
 
 | Concept | Where |
 |---|---|
 | Map preview (single pin) in post detail | `app/(protected)/postDetails/[id].tsx` |
-| Platform-specific files | `components/PostMapView.native.tsx` / `PostMapView.tsx` |
-| Shared props type for both map files | `utils/mapUtils.ts` |
+| Map tab with one pin per post | `app/(protected)/(tabs)/mapScreen.tsx` |
+| Platform-specific files | `components/PostMapView.native.tsx` / `PostMapView.tsx`, `AllPostsMapView.native.tsx` / `AllPostsMapView.tsx` |
+| Shared props types and helpers for the map files | `utils/mapUtils.ts` |
 | Google Maps API key injected at build time | `app.config.js` |
 
 What this session deliberately does **not** do:
-- **No Map tab.** There's no full-screen map with every post — only the post you're viewing.
-- **No grouping.** `PostMapView` always renders exactly one pin, so there's no need to group posts that share coordinates.
+- **No grouping.** The Map tab draws one pin per post. Posts created at the same spot sit on top of each other — `session12-maps-full` groups them.
 - **Address lookup is unchanged.** It still uses the Google Geocoding API from Session 11 (`reverseGeocode()` in `utils/locationUtils.ts`). The same `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` is now also used to draw the map.
 
 ---
@@ -76,6 +76,35 @@ Old posts without a `location` field show no map. No data migration is needed.
 
 ---
 
+## Key concept: the Map tab
+
+`app/(protected)/(tabs)/mapScreen.tsx` loads every post with the same `useAllPostsQuery()` hook from Session 11 and passes them to `AllPostsMapView`. Like `PostMapView`, it has a `.native.tsx` file and a web file.
+
+Two helpers in `utils/mapUtils.ts` do the work:
+
+```ts
+getPostsWithLocation(posts) // drop posts without coordinates
+getRegionForPosts(posts)    // centre + zoom that fits every pin on screen
+```
+
+On iOS/Android each post becomes a `<Marker>`. Its `title` and `description` give a built-in bubble, and tapping the bubble opens the post:
+
+```tsx
+<Marker
+  key={post.id}
+  coordinate={post.location!}
+  title={post.title}
+  description={`By ${post.author} · tap to open`}
+  onCalloutPress={() => router.push({ pathname: "/postDetails/[id]", params: { id: post.id, title: post.title } })}
+/>
+```
+
+On web, tapping a pin opens a small `InfoWindowF` popup with an **Open post →** button.
+
+The screen refetches every time the tab is opened (`useFocusEffect`), so a post you just created appears on the map straight away.
+
+---
+
 ## Key concept: app.config.js and the Maps key
 
 Android needs the Google Maps key inside its native config. `app.json` is static and cannot read environment variables, but `app.config.js` can:
@@ -126,7 +155,11 @@ npx expo start --web   # web uses Google Maps JS, no native build needed
 |---|---|
 | `components/PostMapView.native.tsx` | New — MapView with a single marker and zoom buttons |
 | `components/PostMapView.tsx` | New — Google Maps on web, single marker |
-| `utils/mapUtils.ts` | New — shared `PostMapViewProps` type |
+| `utils/mapUtils.ts` | New — shared props types, `getPostsWithLocation()`, `getRegionForPosts()` |
+| `components/AllPostsMapView.native.tsx` | New — MapView with one marker per post (Map tab) |
+| `components/AllPostsMapView.tsx` | New — Google Maps on web with one marker per post |
+| `app/(protected)/(tabs)/mapScreen.tsx` | New — Map tab screen |
+| `app/(protected)/(tabs)/_layout.tsx` | Added the Map tab |
 | `app/(protected)/postDetails/[id].tsx` | Added the map preview inside the location card |
 | `app.config.js` | Injects `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` into the Android config |
 | `.env.example` | `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` is now also used for the map (Android + web) |

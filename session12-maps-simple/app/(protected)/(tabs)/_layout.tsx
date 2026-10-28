@@ -13,6 +13,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="mapScreen"
+        options={{
+          title: "Map",
+          tabBarIcon: ({ color }) => <AntDesign name="environment" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="profilePage"
         options={{
           title: "Profile",
