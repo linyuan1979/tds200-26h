@@ -5,6 +5,15 @@
 // app.json      → static, no env vars
 // app.config.js → dynamic, can read process.env
 
+// Google Sign-In on iOS redirects back to the app through a URL scheme made
+// from the iOS client ID with its parts reversed:
+//   "123-abc.apps.googleusercontent.com" → "com.googleusercontent.apps.123-abc"
+// Reading it from .env means you only change the client ID in one place.
+const googleIosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
+const googleIosUrlScheme = googleIosClientId
+  ? googleIosClientId.split(".").reverse().join(".")
+  : undefined;
+
 module.exports = {
   expo: {
     name: "TDS200 Session 12 (Maps Simple)",
@@ -17,19 +26,10 @@ module.exports = {
     ios: {
       bundleIdentifier: "com.tds200.session12simple",
       supportsTablet: true,
-      infoPlist: {
-        NSPhotoLibraryUsageDescription:
-          "Select photos to attach to your posts.",
-        NSCameraUsageDescription: "Take photos to attach to your posts.",
-        // Location permission text comes from the expo-location plugin below.
-        CFBundleURLTypes: [
-          {
-            CFBundleURLSchemes: [
-              "com.googleusercontent.apps.703706990742-d3gop1m22amtmpqdek9m24qhftq5cfuk",
-            ],
-          },
-        ],
-      },
+      // Camera, photo and location permission texts come from the plugins below.
+      infoPlist: googleIosUrlScheme
+        ? { CFBundleURLTypes: [{ CFBundleURLSchemes: [googleIosUrlScheme] }] }
+        : {},
     },
     android: {
       adaptiveIcon: {
@@ -39,7 +39,6 @@ module.exports = {
       permissions: [
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.RECORD_AUDIO",
         // Location permissions are added by the expo-location plugin below.
       ],
       package: "com.tds200.session12simple",
@@ -57,7 +56,8 @@ module.exports = {
     },
     plugins: [
       "expo-router",
-      "expo-camera",
+      // The app only takes photos, so skip the microphone permission.
+      ["expo-camera", { microphonePermission: false, recordAudioAndroid: false }],
       [
         "expo-image-picker",
         {
@@ -65,6 +65,7 @@ module.exports = {
             "Allow $(PRODUCT_NAME) to access your photos to attach to posts.",
           cameraPermission:
             "Allow $(PRODUCT_NAME) to take photos to attach to posts.",
+          microphonePermission: false,
         },
       ],
       // Sets the iOS location permission text and adds the Android
